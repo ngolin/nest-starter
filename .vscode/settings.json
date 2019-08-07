@@ -1,0 +1,12 @@
+{
+  "files.autoSave": "onFocusChange",
+  "files.exclude": {
+    "**/.gitignore": true,
+    "**/.prettierrc": true,
+    "**/.vscode": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/package-lock.json": true,
+    "**/tsconfig.build.json": true
+  }
+}

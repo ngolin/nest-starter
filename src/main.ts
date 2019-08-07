@@ -1,8 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { RootModule } from './module';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
-}
-bootstrap();
+NestFactory.create(RootModule, {
+  cors: {
+    maxAge: 3600 * 8,
+    origin: true,
+  },
+}).then(app => {
+  app.setGlobalPrefix('/api');
+  app.listen(8080);
+});
