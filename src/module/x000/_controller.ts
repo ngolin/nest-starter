@@ -1,7 +1,22 @@
-import { Controller, Get, Request, Post, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Req,
+  Post,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
+import { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './_service/auth';
-import { UserService } from './_service/user';
+import { UserService, LoginUser, SessionUser } from './_service/user';
+
+interface UserRequest<T> extends Request {
+  user: T;
+}
+
+export type SessionRequest = UserRequest<SessionUser>;
 
 @Controller('user')
 export class UserController {
@@ -10,28 +25,41 @@ export class UserController {
     private readonly userService: UserService
   ) {}
 
-  /*
-    curl -X POST http://localhost:8080/api/user/login \
-      -d '{"username": "john", "password": "changeme"}' \
-      -H "Content-Type: application/json"
-  */
-  @UseGuards(AuthGuard('local'))
-  @Post('login')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  async login({ password, username }: LoginUser) {
+    const sessionUser = await this.authService.validateUser(username, password);
+    const displayUser = await this.userService.findDisplayData(username);
+    return {
+      session: this.authService.sign(sessionUser),
+      display: displayUser,
+    };
   }
 
-  /*
-    curl http://localhost:8080/api/user/me \
-      -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvaG4iLCJzdWIiOjEsImlhdCI6MTU2NTg4NzEwOCwiZXhwIjoxNTY1ODg3MTY4fQ.FFYL1xqFYng4HYa-VorecLXzf6S-Dp5T7bCdOpMlnuA"
-  */
+  // http -v :8080/api/user/login username=john password=pword
+  @UseGuards(AuthGuard('local'))
+  @Post('login')
+  pwordLogin(@Req() req: UserRequest<LoginUser>) {
+    return this.login(req.user);
+  }
+
+  // http -v :8080/api/user/login Authorization:$Auth
   @UseGuards(AuthGuard('jwt'))
-  @Get('me')
-  getProfile(@Request() req) {
+  @Get('login')
+  async tokenLogin(@Req() req: UserRequest<LoginUser>) {
+    try {
+      return await this.login(req.user);
+    } catch {
+      throw new HttpException('Password Changed', HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  // http -v :8080/api/user/session Authorization:$Auth
+  @UseGuards(AuthGuard('jwt'))
+  @Get('session')
+  getSession(@Req() req: UserRequest<SessionUser>) {
     return req.user;
   }
 
-  // curl http://localhost:8080/api/user
+  // http -v :8080/api/user
   @Get()
   helloWorld() {
     return this.userService.helloWorld();

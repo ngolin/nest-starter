@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { UserService } from './user';
+import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
+import { UserService, SessionUser } from './user';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -9,19 +9,24 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.usersService.findone(username);
-    if (user && user.password === pass) {
-      const { password, ...result } = user;
-      return result;
+  async validateUser(username: string, password: string): Promise<SessionUser> {
+    const user = await this.usersService.findSessionData(username);
+    if (!user) {
+      throw new HttpException(
+        `Username '${username}' Not Found`,
+        HttpStatus.NOT_FOUND
+      );
     }
-    return null;
+    if (user.password !== password) {
+      throw new HttpException(
+        `Password '${password}' Not Acceptable`,
+        HttpStatus.NOT_ACCEPTABLE
+      );
+    }
+    return user;
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+  sign(payload: SessionUser): string {
+    return this.jwtService.sign(payload);
   }
 }
