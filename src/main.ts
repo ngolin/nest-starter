@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { RootModule } from './module';
-import { options } from './global/options';
+import { options } from './global/configure/options';
 import { Transform } from './global/Transform';
 import { Exception } from './global/Exception';
 

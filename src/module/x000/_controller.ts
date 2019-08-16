@@ -1,31 +1,24 @@
 import {
   Controller,
   Get,
-  Req,
   Post,
-  UseGuards,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './_service/auth';
-import { UserService, LoginUser, SessionUser } from './_service/user';
+import { UserService, SignedUser } from './_service/user';
+import { UserGuard, User, SessionUser } from '../../global/decorator/UserGuard';
 
-interface UserRequest<T> extends Request {
-  user: T;
-}
-
-export type SessionRequest = UserRequest<SessionUser>;
-
-@Controller('user')
+@Controller('x000')
 export class UserController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService
   ) {}
 
-  async login({ password, username }: LoginUser) {
+  async login({ password, username }: SignedUser) {
     const sessionUser = await this.authService.validateUser(username, password);
     const displayUser = await this.userService.findDisplayData(username);
     return {
@@ -34,32 +27,39 @@ export class UserController {
     };
   }
 
-  // http -v :8080/api/user/login username=john password=pword
+  // http -v :8080/api/x000/login username=john password=pword
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  pwordLogin(@Req() req: UserRequest<LoginUser>) {
-    return this.login(req.user);
+  pwordLogin(@User() user: SignedUser) {
+    return this.login(user);
   }
 
-  // http -v :8080/api/user/login Authorization:$Auth
-  @UseGuards(AuthGuard('jwt'))
+  // http -v :8080/api/x000/login Authorization:$Auth
+  @UserGuard()
   @Get('login')
-  async tokenLogin(@Req() req: UserRequest<LoginUser>) {
+  async tokenLogin(@User() user: SessionUser) {
     try {
-      return await this.login(req.user);
+      return await this.login(user);
     } catch {
       throw new HttpException('Password Changed', HttpStatus.UNAUTHORIZED);
     }
   }
 
-  // http -v :8080/api/user/session Authorization:$Auth
-  @UseGuards(AuthGuard('jwt'))
+  // http -v :8080/api/x000/session Authorization:$Auth
+  @UserGuard()
   @Get('session')
-  getSession(@Req() req: UserRequest<SessionUser>) {
-    return req.user;
+  getSession(@User() user: SessionUser) {
+    return user;
   }
 
-  // http -v :8080/api/user
+  // http -v :8080/api/x000/userflag Authorization:$Auth
+  @UserGuard(0b10000001)
+  @Get('userflag')
+  getUserflag(@User('userflag') userflag: SessionUser['userflag']) {
+    return userflag;
+  }
+
+  // http -v :8080/api/x000
   @Get()
   helloWorld() {
     return this.userService.helloWorld();

@@ -10,6 +10,7 @@ import { UserController } from './_controller';
 @Module({
   providers: [AuthService, UserService, LocalStrategy, JwtStrategy],
   controllers: [UserController],
+  exports: [UserService],
   imports: [
     PassportModule,
     JwtModule.register({

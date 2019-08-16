@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
-export interface LoginUser {
+export interface SignedUser {
   username: string;
   password: string;
 }
 
-export interface SessionUser extends LoginUser {
+export interface SessionUser extends SignedUser {
   userflag: number;
 }
 
@@ -21,14 +21,14 @@ export class UserService {
   private readonly sessionUsers: SessionUser[] = [
     {
       username: 'john',
-      userflag: 213435,
+      userflag: 0b11110000,
       password: 'pword',
     },
   ];
   private readonly displayUsers: DisplayUser[] = [
     {
       username: 'john',
-      userflag: 213435,
+      userflag: 0b11110000,
       userName: 'Mr John',
       avatar: 'https://avatar',
     },
