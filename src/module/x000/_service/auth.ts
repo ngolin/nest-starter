@@ -1,5 +1,6 @@
 import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
-import { UserService, SessionUser } from './user';
+import { UserService } from './user';
+import { UserS2S } from '../../../shared/user';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -9,9 +10,9 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async validateUser(username: string, password: string): Promise<SessionUser> {
+  async validateUser(username: string, password: string): Promise<UserS2S> {
     try {
-      const user = await this.usersService.findSessionData(username);
+      const user = await this.usersService.findUserS2SorThrow(username);
       if (user.password !== password) {
         throw new HttpException(
           `Password '${password}' Not Acceptable`,
@@ -27,7 +28,7 @@ export class AuthService {
     }
   }
 
-  sign(payload: SessionUser): string {
+  sign(payload: UserS2S): string {
     return this.jwtService.sign(payload);
   }
 }

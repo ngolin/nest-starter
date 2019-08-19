@@ -2,21 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../_entities/user';
-export interface SignedUser {
-  username: string;
-  password: string;
-}
-
-export interface SessionUser extends SignedUser {
-  userflag: number;
-}
-
-export interface DisplayUser {
-  username: string;
-  userflag: number;
-  fullName: string;
-  avatar: string;
-}
+import { UserS2S, UserS2C } from '../../../shared/user';
 
 @Injectable()
 export class UserService {
@@ -25,7 +11,7 @@ export class UserService {
     private readonly userRepo: Repository<User>
   ) {}
 
-  private readonly displayUsers: DisplayUser[] = [
+  private readonly displayUsers: UserS2C[] = [
     {
       username: 'john',
       userflag: 0b11110000,
@@ -34,15 +20,12 @@ export class UserService {
     },
   ];
 
-  async findSessionData(username: string): Promise<SessionUser | never> {
-    if (username === 'root') {
-      return { username, password: '', userflag: 0b11111111 };
-    }
+  async findUserS2SorThrow(username: string): Promise<UserS2S | never> {
     const { userflag, password } = await this.userRepo.findOne({ username });
     return { username, password, userflag };
   }
 
-  async findDisplayData(username: string): Promise<DisplayUser> {
+  async findUserS2U(username: string): Promise<UserS2C | undefined> {
     return this.displayUsers.find(user => user.username === username);
   }
 
