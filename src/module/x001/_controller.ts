@@ -14,7 +14,7 @@ export class TestController {
   @UserGuard()
   @Get()
   async helloWorld(@User('username') username: SessionUser['username']) {
-    const { userName } = await this.userService.findDisplayData(username);
-    return this.testService.helloWorld(userName);
+    const { fullName } = await this.userService.findDisplayData(username);
+    return this.testService.helloWorld(fullName);
   }
 }

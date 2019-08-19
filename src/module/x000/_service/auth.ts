@@ -10,20 +10,21 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, password: string): Promise<SessionUser> {
-    const user = await this.usersService.findSessionData(username);
-    if (!user) {
+    try {
+      const user = await this.usersService.findSessionData(username);
+      if (user.password !== password) {
+        throw new HttpException(
+          `Password '${password}' Not Acceptable`,
+          HttpStatus.NOT_ACCEPTABLE
+        );
+      }
+      return user;
+    } catch {
       throw new HttpException(
         `Username '${username}' Not Found`,
         HttpStatus.NOT_FOUND
       );
     }
-    if (user.password !== password) {
-      throw new HttpException(
-        `Password '${password}' Not Acceptable`,
-        HttpStatus.NOT_ACCEPTABLE
-      );
-    }
-    return user;
   }
 
   sign(payload: SessionUser): string {
